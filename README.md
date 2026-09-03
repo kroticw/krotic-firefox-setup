@@ -33,7 +33,7 @@ would work unchanged.
 ## Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/kroticw/krotic-firefox-setup/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/kroticw/krotic-firefox-setup/master/install.sh | bash
 ```
 
 The script writes into your Firefox application bundle and profile. If you would
