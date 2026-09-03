@@ -1,0 +1,14 @@
+/* ==== Natsumi config ==== */
+
+* {
+  /* Accent colour */
+  --natsumi-accent-color: #7b5cff;
+
+  /* pdf.js */
+  --pdfjs-topbar-max-width: 750px;
+
+  /* New tab page background.
+     Point this at any image URL you like. Comment the line out to fall back to
+     the stock Natsumi background. Requires natsumi.home.custom-background. */
+  --home-background-url: url("__HOME_BACKGROUND_URL__");
+}
