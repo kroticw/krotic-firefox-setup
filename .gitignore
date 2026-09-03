@@ -1,0 +1,24 @@
+# Never commit anything pulled out of a live profile
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.jsonlz4
+*.baklz4
+logins*.json
+key*.db
+cert*.db
+prefs.js
+sessionstore*
+places*
+cookies*
+formhistory*
+
+# Upstream dependencies are downloaded by install.sh, never vendored
+profile/chrome/natsumi/
+profile/chrome/utils/
+profile/chrome/JS/
+profile/chrome/CSS/
+profile/chrome/resources/
+
+# macOS
+.DS_Store
