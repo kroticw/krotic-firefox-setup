@@ -1,0 +1,191 @@
+@import "natsumi/natsumi.css";
+
+/* ==========================================================================
+   Persistent accent outline on the address bar
+   ========================================================================== */
+
+/* Idle state keeps a translucent accent border instead of no border at all. */
+#nav-bar #urlbar:not([open]) {
+  border-color: color-mix(in srgb, var(--natsumi-accent-color) 55%, transparent) !important;
+}
+
+/* Focused state brings the same accent to full strength. */
+#nav-bar #urlbar[focused] {
+  border-color: var(--natsumi-accent-color) !important;
+}
+
+/* ==========================================================================
+   Fix: phantom gaps between collapsed tab groups
+   ==========================================================================
+
+   Stock Firefox removes the tabs of a collapsed group from layout entirely:
+
+       #tabbrowser-tabs[orient="vertical"] tab-group[collapsed]
+         > .tabbrowser-tab:not([visuallyselected], [multiselected]) {
+         display: none;
+       }
+
+   Natsumi puts them back into the flow (display: flex + max-height: 0) to keep
+   the collapse animation, but does not zero their vertical margins and padding.
+   Every hidden tab therefore still occupies a few pixels, and the gap below a
+   collapsed group grows in proportion to how many tabs it holds.
+
+   The rules below zero the box model of those hidden tabs while keeping
+   Natsumi's animation intact.
+   ========================================================================== */
+
+@media -moz-pref("sidebar.verticalTabs") {
+  tab-group[collapsed] > .tabbrowser-tab:not([visuallyselected], [multiselected], [selected]),
+  #tabbrowser-tabs[orient="vertical"] tab-group[collapsed] > .tabbrowser-tab:not([visuallyselected], [multiselected], [selected]),
+  #tabbrowser-tabs[orient="vertical"] tab-group[collapsed] > tab-split-view-wrapper:not([hasactivetab]) {
+    margin-block: 0 !important;
+    padding-block: 0 !important;
+    border-block-width: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    overflow: hidden !important;
+    overflow-clip-margin: 0 !important;
+  }
+
+  /* Inner layers must not push the zero height back open. */
+  tab-group[collapsed] > .tabbrowser-tab:not([visuallyselected], [multiselected], [selected]) {
+    & > .tab-stack,
+    & .tab-background,
+    & .tab-content {
+      margin-block: 0 !important;
+      padding-block: 0 !important;
+      min-height: 0 !important;
+      max-height: 0 !important;
+    }
+  }
+}
+
+/* If any gap survives, uncomment the block below. It restores the stock
+   Firefox behaviour of dropping hidden tabs out of the flow completely, at the
+   cost of losing the collapse animation.
+
+@media -moz-pref("sidebar.verticalTabs") {
+  #tabbrowser-tabs[orient="vertical"] tab-group[collapsed] > .tabbrowser-tab:not([visuallyselected], [multiselected]),
+  #tabbrowser-tabs[orient="vertical"] tab-group[collapsed] > tab-split-view-wrapper:not([hasactivetab]) {
+    display: none !important;
+  }
+}
+*/
+
+/* ==========================================================================
+   Tab group header rows: accent stripe over a neutral pill
+   ==========================================================================
+
+   Applies to the expanded vertical sidebar only. Stock Firefox draws no group
+   line on the label row in that mode: content: "" for
+   .tab-group-label-container::after is only set for horizontal tabs and for the
+   narrow sidebar, so the pseudo-element is free here and nothing doubles up.
+
+   The stripe colour comes from the built-in per-group variables using the same
+   expression Natsumi applies to the folder icon, so stripe and icon always
+   match.
+   ========================================================================== */
+
+@media -moz-pref("sidebar.verticalTabs") {
+  #tabbrowser-tabs[orient="vertical"][expanded] tab-group > .tab-group-label-container {
+    position: relative !important;
+    background-color: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.06)) !important;
+    border-radius: var(--natsumi-tab-border-radius, 8px) !important;
+    transition: background-color 0.15s ease !important;
+
+    &:hover {
+      background-color: light-dark(rgba(0, 0, 0, 0.09), rgba(255, 255, 255, 0.12)) !important;
+    }
+
+    /* Accent stripe in the group's own colour. */
+    &::after {
+      content: "" !important;
+      position: absolute !important;
+      inset-block: 4px !important;
+      inset-inline: var(--fx-group-line-inset) auto !important;
+      width: var(--fx-group-line-width) !important;
+      border-radius: calc(var(--fx-group-line-width) / 2) !important;
+      background-color: light-dark(var(--tab-group-color), var(--tab-group-color-invert)) !important;
+      pointer-events: none;
+    }
+
+    /* Keep the folder icon and the label clear of the stripe. */
+    & > .tab-group-label {
+      padding-inline-start: calc(var(--tab-inline-padding) - var(--tab-inner-inline-margin) + 9px) !important;
+    }
+  }
+}
+
+/* ==========================================================================
+   Continuous stripe along the tabs of an expanded group
+   ==========================================================================
+
+   The stripe is anchored to the tab element itself, not to .tab-background and
+   not to the stock .tab-group-line. That makes the horizontal coordinate exact
+   instead of estimated.
+
+   .tab-group-label-container and .tabbrowser-tab are siblings in one column
+   (tab-group is display: contents and generates no box of its own), so their
+   left edges are decided solely by their own margin-left, which Natsumi sets in
+   modules/folders.css:
+
+       .tab-group-label-container   margin-left: var(--tab-inner-inline-margin)
+       .tabbrowser-tab              margin-left: 15px
+
+   The header stripe sits --fx-group-line-inset from the left edge of its row,
+   so its absolute position is --tab-inner-inline-margin + inset. To place a tab
+   segment on the same vertical, offset it by
+   (--tab-inner-inline-margin + inset) - 15px.
+
+   Vertically, .tabbrowser-tab has margin: 0, so tabs abut each other and
+   segments with inset-block: 0 form one unbroken line without overlap tricks.
+   The only real gap is the 2px bottom margin of the header row, closed by the
+   negative inset-block-end on the header stripe.
+
+   overflow: visible is required so a segment shifted to the left is not clipped
+   by the tab's own bounds. Tab titles are unaffected: they are clipped by
+   .tab-label-container through its own overflow: hidden and fade mask.
+   ========================================================================== */
+
+:root {
+  --fx-group-line-width: 3px;
+  --fx-group-line-inset: 2px; /* stripe offset from the left edge of a group row */
+}
+
+@media -moz-pref("sidebar.verticalTabs") {
+  #tabbrowser-tabs[orient="vertical"][expanded] {
+    /* The header stripe reaches down to the first tab of an open group. */
+    tab-group:not([collapsed]) > .tab-group-label-container::after {
+      inset-block-end: -2px !important;
+      border-end-start-radius: 0 !important;
+      border-end-end-radius: 0 !important;
+    }
+
+    /* One stripe segment per tab in the group. */
+    tab-group:not([collapsed]) > .tabbrowser-tab {
+      position: relative !important;
+      overflow: visible !important;
+
+      &::after {
+        content: "" !important;
+        position: absolute !important;
+        inset-block: 0 !important;
+        inset-inline-start: calc(
+          var(--tab-inner-inline-margin) + var(--fx-group-line-inset) - 15px
+        ) !important;
+        inset-inline-end: auto !important;
+        width: var(--fx-group-line-width) !important;
+        background-color: light-dark(var(--tab-group-color), var(--tab-group-color-invert)) !important;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      /* The last tab closes the stripe with a rounded end. */
+      &:last-of-type::after {
+        inset-block-end: var(--tab-margin-block, 2px) !important;
+        border-end-start-radius: calc(var(--fx-group-line-width) / 2) !important;
+        border-end-end-radius: calc(var(--fx-group-line-width) / 2) !important;
+      }
+    }
+  }
+}
