@@ -65,7 +65,7 @@ Start Firefox afterwards and the setup is live.
    bundle, and `utils/`, `JS/`, `CSS/`, `resources/` into the profile's `chrome/`.
 5. Copies Natsumi into `chrome/natsumi/`.
 6. Copies this repository's `userChrome.css`, `userContent.css`,
-   `natsumi-config.css` and `user.js`.
+   `natsumi-config.css`, `assets/` and `user.js`.
 
 Re-running is safe and expected.
 
@@ -87,10 +87,14 @@ Re-running is safe and expected.
 
 ```css
 --natsumi-accent-color: #7b5cff;
---home-background-url: url("https://example.com/your-wallpaper.jpg");
+--home-background-url: url("assets/home-background.jpg");
 ```
 
-Comment out `--home-background-url` to keep the stock Natsumi background.
+The background ships with the repository and is installed next to the
+stylesheet, so it works offline. Point the variable at a URL to use your own
+image, or comment the line out to keep the stock Natsumi background. The
+`natsumi.home.custom-background` preference in `user.js` controls whether a
+custom background is used at all.
 
 ### Tab group stripe
 

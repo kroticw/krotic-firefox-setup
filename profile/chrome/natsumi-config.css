@@ -7,8 +7,9 @@
   /* pdf.js */
   --pdfjs-topbar-max-width: 750px;
 
-  /* New tab page background.
-     Point this at any image URL you like. Comment the line out to fall back to
-     the stock Natsumi background. Requires natsumi.home.custom-background. */
-  --home-background-url: url("__HOME_BACKGROUND_URL__");
+  /* New tab page background. The path is relative to this file, so it also
+     works offline. Swap in any URL instead, or comment the line out to fall
+     back to the stock Natsumi background.
+     Requires the natsumi.home.custom-background preference. */
+  --home-background-url: url("assets/home-background.jpg");
 }

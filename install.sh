@@ -32,6 +32,7 @@ REPO_FILES=(
   "profile/chrome/userChrome.css"
   "profile/chrome/userContent.css"
   "profile/chrome/natsumi-config.css"
+  "profile/chrome/assets/home-background.jpg"
   "profile/user.js"
 )
 
@@ -199,16 +200,17 @@ tar -xzf "$TMP/fxac.tar.gz" -C "$TMP/fxac" --strip-components=1
 step "Collecting configuration files"
 
 SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || true)"
-mkdir -p "$TMP/repo/profile/chrome"
 
 if [[ -n "$SELF_DIR" && -f "$SELF_DIR/profile/user.js" ]]; then
   info "using the local clone"
   for f in "${REPO_FILES[@]}"; do
+    mkdir -p "$TMP/repo/$(dirname "$f")"
     cp "$SELF_DIR/$f" "$TMP/repo/$f"
   done
 else
   info "downloading from $REPO_RAW"
   for f in "${REPO_FILES[@]}"; do
+    mkdir -p "$TMP/repo/$(dirname "$f")"
     fetch "$REPO_RAW/$f" "$TMP/repo/$f"
   done
 fi
@@ -270,6 +272,9 @@ cp "$TMP/repo/profile/chrome/userChrome.css"     "$CHROME/userChrome.css"
 cp "$TMP/repo/profile/chrome/userContent.css"    "$CHROME/userContent.css"
 cp "$TMP/repo/profile/chrome/natsumi-config.css" "$CHROME/natsumi-config.css"
 cp "$TMP/repo/profile/user.js"                   "$PROFILE/user.js"
+
+rm -rf "${CHROME:?}/assets"
+cp -R "$TMP/repo/profile/chrome/assets" "$CHROME/assets"
 
 # --------------------------------------------------------------------------
 # Done
