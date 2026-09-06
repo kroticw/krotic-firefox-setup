@@ -147,6 +147,36 @@ Closing a window on macOS does not quit Firefox. Tab groups from a window closed
 that way are not lost, but they move to the saved groups list instead of being
 restored with the session, which looks a lot like losing them. Quit with Cmd+Q.
 
+### Getting a session back
+
+If the groups are not in the saved list either, they are still in the session
+store — until they age out. The store lives in the profile:
+
+```
+<profile>/sessionstore-backups/recovery.jsonlz4
+```
+
+It is not JSON. The format is mozlz4: a `mozLz40` magic followed by an LZ4
+block, so it has to be decompressed before anything can read it. Once decoded,
+two separate top-level keys matter, and confusing them is what makes a session
+look lost:
+
+- `savedGroups` — groups that were saved rather than restored, which is where a
+  window closed with Cmd+W puts them;
+- `_closedWindows` — recently closed windows, capped by
+  `browser.sessionstore.max_windows_undo`.
+
+That cap is why the preferences here raise the undo limits from the stock 3
+windows and 25 tabs to 10 and 50. It is not a convenience setting: once a closed
+window falls off the end of `_closedWindows` it is genuinely gone, and the length
+of that list is the length of the safety net.
+
+## Hacking
+
+Notes on editing the stylesheets — how to read the stock rules that Natsumi and
+this repo override, and the two layout mistakes worth not repeating — are in
+[docs/hacking.md](docs/hacking.md).
+
 ## Credits
 
 - [Natsumi Browser](https://github.com/greeeen-dev/natsumi-browser) by
