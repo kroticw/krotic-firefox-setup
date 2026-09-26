@@ -263,6 +263,18 @@ done
 [[ -f "$CHROME/utils/module_loader.mjs" ]] \
   || warn "module_loader.mjs is missing — Natsumi's scripts will be listed but never loaded."
 
+# Natsumi ships its scripts under natsumi/scripts/ and loads its own chrome://
+# packages, so the stock manifest's `userscripts ../JS/` would leave every one of
+# them unloaded. This is the manifest from Natsumi's installation instructions.
+cat > "$CHROME/utils/chrome.manifest" <<'EOF'
+content userchromejs ./
+content userscripts ../natsumi/scripts/
+skin userstyles classic/1.0 ../CSS/
+content userchrome ../resources/
+content natsumi ../natsumi/
+content natsumi-icons ../natsumi/icons/
+EOF
+
 step "Installing Natsumi Browser"
 rm -rf "${CHROME:?}/natsumi"
 cp -R "$TMP/natsumi/natsumi" "$CHROME/natsumi"

@@ -63,6 +63,8 @@ Start Firefox afterwards and the setup is live.
    `<profile>/krotic-firefox-setup-backup-<timestamp>/`.
 4. Copies `config.js` and `defaults/pref/config-prefs.js` into the application
    bundle, and `utils/`, `JS/`, `CSS/`, `resources/` into the profile's `chrome/`.
+   `utils/chrome.manifest` is then replaced with the one from Natsumi's install
+   instructions, which points fx-autoconfig at Natsumi's scripts.
 5. Copies Natsumi into `chrome/natsumi/`.
 6. Copies this repository's `userChrome.css`, `userContent.css`,
    `natsumi-config.css`, `assets/` and `user.js`.
