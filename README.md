@@ -80,6 +80,8 @@ Re-running is safe and expected.
 | `NATSUMI_VERSION` | Natsumi git tag |
 | `FXAC_COMMIT` | fx-autoconfig commit SHA |
 | `ASSUME_YES` | Set to `1` to skip every prompt |
+| `BACKUP_DIR` | Where to back up the current setup instead of the profile |
+| `ALLOW_RUNNING` | Set to `1` to install while Firefox is running; applies on the next start |
 
 ## Configuration
 

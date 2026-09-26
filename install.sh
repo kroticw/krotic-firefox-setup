@@ -19,6 +19,10 @@
 #   NATSUMI_VERSION   Natsumi git tag
 #   FXAC_COMMIT       fx-autoconfig commit SHA
 #   ASSUME_YES        set to 1 to skip every prompt
+#   BACKUP_DIR        where to back up the current setup
+#                     (default: <profile>/krotic-firefox-setup-backup-<timestamp>)
+#   ALLOW_RUNNING     set to 1 to install while Firefox is running; the files
+#                     are only read at startup, so they apply on the next launch
 
 set -euo pipefail
 
@@ -27,6 +31,7 @@ NATSUMI_VERSION="${NATSUMI_VERSION:-v6.12.2}"
 FXAC_COMMIT="${FXAC_COMMIT:-dfdab5684faffc112b76ccb1d8cab7f75da0102c}"
 REPO_RAW="${REPO_RAW:-https://raw.githubusercontent.com/kroticw/krotic-firefox-setup/master}"
 ASSUME_YES="${ASSUME_YES:-0}"
+ALLOW_RUNNING="${ALLOW_RUNNING:-0}"
 
 REPO_FILES=(
   "profile/chrome/userChrome.css"
@@ -109,7 +114,11 @@ RESOURCES="$APP/Contents/Resources"
 info "$APP"
 
 if pgrep -f "$APP/Contents/MacOS" >/dev/null 2>&1; then
-  die "Firefox is running. Quit it with Cmd+Q first — otherwise it will overwrite prefs.js on exit and undo this install."
+  if [[ "$ALLOW_RUNNING" == "1" ]]; then
+    warn "Firefox is running. The new setup applies after you quit it with Cmd+Q and start it again."
+  else
+    die "Firefox is running. Quit it with Cmd+Q first — otherwise it will overwrite prefs.js on exit and undo this install. Set ALLOW_RUNNING=1 to install anyway and apply on the next start."
+  fi
 fi
 
 # --------------------------------------------------------------------------
@@ -220,7 +229,8 @@ fi
 # --------------------------------------------------------------------------
 
 STAMP="$(date +%Y%m%d-%H%M%S)"
-BACKUP="$PROFILE/krotic-firefox-setup-backup-$STAMP"
+BACKUP="${BACKUP_DIR:-$PROFILE/krotic-firefox-setup-backup-$STAMP}"
+[[ -e "$BACKUP" ]] && die "Backup directory already exists: $BACKUP"
 
 if [[ -d "$CHROME" || -f "$PROFILE/user.js" ]]; then
   step "Backing up the current setup"
