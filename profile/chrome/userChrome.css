@@ -211,8 +211,15 @@
    - the results list is a separate popover anchored to .urlbar-input-container,
      and anchor positioning ignores translate and scale, so the list lines up
      with the untransformed box and lands shifted to the right;
-   - 157 sets [open] only while the list is showing, but the card has to appear
-     as soon as the bar is focused.
+   - Natsumi keys the card on [open], which 157 sets only while the list is
+     showing. Keying it on [focused] instead would open it on every new tab,
+     where Firefox focuses the bar on its own. A click and Cmd+L open the list
+     straight away (open, suppress-focus-border), typing sets usertyping, and
+     the new tab's own focus sets only focused. So the card follows
+     :is([open], [focused][usertyping], [focused][suppress-focus-border]): a
+     new tab keeps the focus in the bar without the card, the first keystroke
+     brings it up, Esc closes the list and the card with it, and a second Esc
+     returns focus to the page as stock Firefox does.
    Verified on a headless stand (a throwaway profile holding only chrome/ and
    user.js, a 2000x1103 window, driven over Marionette): before and after
    frames, and a click outside closes the card.
@@ -239,7 +246,7 @@
 
 @media not -moz-pref("natsumi.urlbar.do-not-float") {
   :root:not([taskbartab]) {
-    #navigator-toolbox:has(#urlbar:is([focused], [open])) {
+    #navigator-toolbox:has(#urlbar:is([open], [focused][usertyping], [focused][suppress-focus-border])) {
       z-index: var(--browser-area-z-index-toolbox-while-animating) !important;
       overflow: visible !important;
     }
@@ -247,7 +254,7 @@
     /* On 157 #nav-bar and the bookmarks toolbar carry browser-titlebar, whose
        will-change: opacity makes each one its own stacking context, so the
        bookmarks toolbar would paint over the dimming. */
-    #nav-bar:has(#urlbar:is([focused], [open])) {
+    #nav-bar:has(#urlbar:is([open], [focused][usertyping], [focused][suppress-focus-border])) {
       z-index: 1 !important;
     }
 
@@ -259,11 +266,19 @@
        while .urlbar-background keeps the full width of #urlbar and reads as a
        wide bar. Narrow both to a quarter of the window under the same
        condition Natsumi uses (modules/urlbar.css: toolbox not hovered, bar
-       neither focused nor open). */
-    #navigator-toolbox:not(:hover) #nav-bar #urlbar:not([open], [focused]):not(:has(box[open], .urlbar-page-action[open])) {
+       not showing the card). The accent outline from the rule above moves from
+       #urlbar to the pill's background, or it would outline an empty bar. */
+    #navigator-toolbox:not(:hover) #nav-bar #urlbar:not([open], [focused][usertyping], [focused][suppress-focus-border]):not(:has(box[open], .urlbar-page-action[open])) {
+      border-color: transparent !important;
+
       & > .urlbar-background {
         inset-inline: max(0px, calc(50% - var(--fx-pill-width) / 2)) !important;
+        border: 1px solid color-mix(in srgb, var(--natsumi-accent-color) 55%, transparent) !important;
         transition: inset-inline 0.2s ease 0.5s;
+      }
+
+      &[focused] > .urlbar-background {
+        border-color: var(--natsumi-accent-color) !important;
       }
 
       & > .urlbar-input-container {
@@ -281,11 +296,11 @@
         light-dark(rgb(249, 249, 251), rgb(28, 27, 34));
       --fx-card-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
 
-      #urlbar-container:has(> #urlbar:is([focused], [open])) {
+      #urlbar-container:has(> #urlbar:is([open], [focused][usertyping], [focused][suppress-focus-border])) {
         padding-block: var(--natsumi-urlbar-container-padding) !important;
       }
 
-      #urlbar:is([focused], [open]) {
+      #urlbar:is([open], [focused][usertyping], [focused][suppress-focus-border]) {
         /* Keep the bar's place in the toolbar: drop Natsumi's offset and animation, hold the height. */
         top: auto !important;
         left: auto !important;
