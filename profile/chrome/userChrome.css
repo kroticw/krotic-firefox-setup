@@ -189,3 +189,33 @@
     }
   }
 }
+
+/* ==========================================================================
+   Fix: address bar on Firefox 157 with natsumi.urlbar.do-not-float
+   ==========================================================================
+
+   Firefox 157 sets [open] on #urlbar only while the results list is showing,
+   and the list itself is a separate popover under the input. Natsumi 6.12.2
+   keys the bar's size and its centred text on #urlbar:not([open])
+   (modules/urlbar.css), which leaves two defects:
+
+   - focused with no results, the typed text stays centred;
+   - with results open, Natsumi's sizing no longer applies, the bar takes the
+     stock Nova height and spills over the bookmarks toolbar.
+
+   This keeps the closed bar's geometry and starts the text at the left edge
+   while typing. The #nav-bar in the selector outranks Natsumi's rule
+   (3,3,0 against 2,3,0).
+   ========================================================================== */
+
+@media -moz-pref("natsumi.urlbar.do-not-float") {
+  :root:not([taskbartab]) #nav-bar #urlbar:is([focused], [open]) {
+    height: var(--natsumi-urlbar-height) !important;
+    min-height: var(--natsumi-urlbar-height) !important;
+    margin-block: var(--natsumi-urlbar-margin) !important;
+
+    & #urlbar-input {
+      text-align: start !important;
+    }
+  }
+}
