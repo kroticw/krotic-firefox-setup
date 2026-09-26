@@ -70,10 +70,5 @@ user_pref("natsumi.theme.single-toolbar", false);
 user_pref("natsumi.theme.soft-glow", true);
 user_pref("natsumi.theme.type", "colorful");
 user_pref("natsumi.theme.use-legacy-translucency", false);
-// Firefox 157 turned the address bar into a plain in-toolbar element and moved
-// its results into a separately anchored popover. Natsumi 6.12.2 still floats
-// the bar by offsetting #urlbar itself, which pushes the input out of the
-// toolbar and drags the results into the middle of the window. Keep the bar in
-// place until Natsumi catches up.
-user_pref("natsumi.urlbar.do-not-float", true);
+user_pref("natsumi.urlbar.do-not-float", false);
 user_pref("natsumi.welcome.viewed", true);
