@@ -195,27 +195,55 @@
    ==========================================================================
 
    Firefox 157 sets [open] on #urlbar only while the results list is showing,
-   and the list itself is a separate popover under the input. Natsumi 6.12.2
-   keys the bar's size and its centred text on #urlbar:not([open])
-   (modules/urlbar.css), which leaves two defects:
+   and the list is a separate popover anchored to .urlbar-input-container.
+   Natsumi 6.12.2 puts all of the bar's geometry on #urlbar:not([open])
+   (modules/urlbar.css): the container's padding, the bar's height and border,
+   the input container's padding and height, and the centred text. With the
+   list open all of that drops away, and in non-floating mode Natsumi adds
+   padding-block: 5px and margin-top: 4px on top, so the bar swells over the
+   neighbouring toolbars.
 
-   - focused with no results, the typed text stays centred;
-   - with results open, Natsumi's sizing no longer applies, the bar takes the
-     stock Nova height and spills over the bookmarks toolbar.
+   Under Nova the stock --urlbar-background-overhang-open of 8px also pushes the
+   list's background past the bar's edges, while Natsumi pins the bar's own
+   background to them (.urlbar-background { inset: 0 } in nova-patches.css).
+   That is the step between the bar and the list.
 
-   This keeps the closed bar's geometry and starts the text at the left edge
-   while typing. The #nav-bar in the selector outranks Natsumi's rule
-   (3,3,0 against 2,3,0).
+   This keeps the closed bar's geometry while it is focused or open, starts the
+   text at the left edge, and lines the list's background up with the bar. The
+   derived outset variables are declared on :root, so they are restated here
+   rather than only zeroing the overhang. The #nav-bar in the selectors
+   outranks Natsumi's rules.
    ========================================================================== */
 
 @media -moz-pref("natsumi.urlbar.do-not-float") {
-  :root:not([taskbartab]) #nav-bar #urlbar:is([focused], [open]) {
-    height: var(--natsumi-urlbar-height) !important;
-    min-height: var(--natsumi-urlbar-height) !important;
-    margin-block: var(--natsumi-urlbar-margin) !important;
+  :root:not([taskbartab]) #nav-bar {
+    #urlbar-container:has(> #urlbar:is([focused], [open])) {
+      padding-block: var(--natsumi-urlbar-container-padding) !important;
+    }
 
-    & #urlbar-input {
-      text-align: start !important;
+    #urlbar:is([focused], [open]) {
+      --urlbar-background-overhang-open: 0px;
+      --urlbarView-joint-background-outset-inline: var(--urlbarView-margin-inline);
+      --urlbarView-joint-background-outset-block: var(--urlbarView-margin-block);
+
+      height: var(--natsumi-urlbar-height) !important;
+      min-height: var(--natsumi-urlbar-height) !important;
+      margin-block: var(--natsumi-urlbar-margin) !important;
+      border-style: solid !important;
+      border-width: 1px !important;
+      border-radius: 16px !important;
+
+      & > .urlbar-input-container {
+        padding: var(--natsumi-urlbar-input-padding) !important;
+        height: var(--natsumi-urlbar-input-height) !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+        left: 0 !important;
+      }
+
+      & #urlbar-input {
+        text-align: start !important;
+      }
     }
   }
 }
