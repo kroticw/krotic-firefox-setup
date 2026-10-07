@@ -191,83 +191,38 @@
 }
 
 /* ==========================================================================
-   Fix: Natsumi's floating address bar on Firefox 157
+   Address bar: narrow pill at rest, dimmed opaque card while open
    ==========================================================================
 
-   The design Natsumi intends: a narrow pill in the toolbar at rest, and on
-   focus a card in the middle of the window with the input on top, the results
-   inside it and the page dimmed behind.
+   Since 6.12.3 Natsumi draws the floating card itself on Firefox 157+: its
+   urlbar script strips the popover attribute from .urlbarView, so the results
+   list is laid out inside #urlbar again, and #urlbar[open] becomes
+   position: fixed with a column layout (modules/urlbar.css, scripts/urlbar.uc.mjs).
+   It also raises #navigator-toolbox above the page (z-index: 3, modules/base.css).
+   The card is placed, sized and animated by Natsumi; nothing here moves it.
 
-   Why Natsumi 6.12.2's floating mode breaks on 157:
-   - #urlbar is now an ordinary element in the toolbar, not a top-layer popover.
-     Natsumi moves the whole #urlbar (top: 25vh, left: 50%, translate: -50% in
-     modules/urlbar.css), which pushes the input down;
-   - the toolbox paints BELOW the page by default (--browser-area-z-index-toolbox
-     is 0, the tabbox is 2), and it has overflow: clip, so anything moved below
-     the toolbar, the input and the dimming shadow included, is cut off;
-   - the stock <moz-urlbar> has contain: layout, which makes it the containing
-     block for position: fixed, so a fixed card is placed relative to #urlbar
-     instead of the window;
-   - the results list is a separate popover anchored to .urlbar-input-container,
-     and anchor positioning ignores translate and scale, so the list lines up
-     with the untransformed box and lands shifted to the right;
-   - Natsumi keys the card on [open], which 157 sets only while the list is
-     showing. Keying it on [focused] instead would open it on every new tab,
-     where Firefox focuses the bar on its own. A click and Cmd+L open the list
-     straight away (open, suppress-focus-border), typing sets usertyping, and
-     the new tab's own focus sets only focused. So the card follows
-     :is([open], [focused][usertyping], [focused][suppress-focus-border]): a
-     new tab keeps the focus in the bar without the card, the first keystroke
-     brings it up, Esc closes the list and the card with it, and a second Esc
-     returns focus to the page as stock Firefox does.
-   Verified on a headless stand (a throwaway profile holding only chrome/ and
-   user.js, a 2000x1103 window, driven over Marionette): before and after
-   frames, and a click outside closes the card.
-
-   What this does:
+   What stays on top of Natsumi, all of it look rather than layout:
    - at rest the pill's background and input container are narrowed to a
-     quarter of the window;
-   - #urlbar stays in its place in the toolbar and keeps its height, so the
-     toolbars do not jump; its own background (the pill) is hidden while typing;
-   - only .urlbar-input-container moves: position: fixed, centred with
-     left: calc() and no translate, so the list's anchor matches the input;
-   - while the bar is focused the toolbox is raised above the page with the
-     stock --browser-area-z-index-toolbox-while-animating and stops clipping
-     (overflow: visible), and #urlbar drops its containment;
-   - the dimming is the input container's own shadow spread over the window
-     (100vmax). A shadow takes no clicks, so a click outside reaches the page
-     and the bar loses focus;
-   - the list (a top-layer popover) sits right under the input at the same
-     width, without its own margins and without the stock background overhang,
-     sharing the card's border and shadow; the card's background is opaque
-     (Natsumi's material over a solid colour).
+     quarter of the window. Natsumi narrows only the input container (300px),
+     while .urlbar-background keeps the full width of #urlbar and reads as a
+     wide bar. The accent outline moves from #urlbar to the pill's background,
+     or it would outline an empty bar;
+   - the open card gets an accent border and an opaque background (Natsumi's
+     material over a solid colour), and the page behind it is dimmed by the
+     card's own shadow spread over the window (100vmax). A shadow takes no
+     clicks, so a click outside reaches the page and closes the card;
+   - #nav-bar and the bookmarks toolbar each carry browser-titlebar, whose
+     will-change: opacity makes each one its own stacking context, so the
+     bookmarks toolbar would paint over the dimming unless #nav-bar is lifted.
    The #nav-bar in the selectors outranks Natsumi's rules.
    ========================================================================== */
 
 @media not -moz-pref("natsumi.urlbar.do-not-float") {
   :root:not([taskbartab]) {
-    #navigator-toolbox:has(#urlbar:is([open], [focused][usertyping], [focused][suppress-focus-border])) {
-      z-index: var(--browser-area-z-index-toolbox-while-animating) !important;
-      overflow: visible !important;
-    }
-
-    /* On 157 #nav-bar and the bookmarks toolbar carry browser-titlebar, whose
-       will-change: opacity makes each one its own stacking context, so the
-       bookmarks toolbar would paint over the dimming. */
-    #nav-bar:has(#urlbar:is([open], [focused][usertyping], [focused][suppress-focus-border])) {
-      z-index: 1 !important;
-    }
-
     #navigator-toolbox {
       --fx-pill-width: 25vw;
     }
 
-    /* The pill at rest: Natsumi narrows only the input container (300px),
-       while .urlbar-background keeps the full width of #urlbar and reads as a
-       wide bar. Narrow both to a quarter of the window under the same
-       condition Natsumi uses (modules/urlbar.css: toolbox not hovered, bar
-       not showing the card). The accent outline from the rule above moves from
-       #urlbar to the pill's background, or it would outline an empty bar. */
     #navigator-toolbox:not(:hover) #nav-bar #urlbar:not([open], [focused][usertyping], [focused][suppress-focus-border]):not(:has(box[open], .urlbar-page-action[open])) {
       border-color: transparent !important;
 
@@ -287,102 +242,19 @@
       }
     }
 
-    #nav-bar {
-      --fx-card-width: min(58vw, 1000px);
-      --fx-card-radius: 12px;
-      --fx-card-border: 1px solid var(--natsumi-accent-color);
-      --fx-card-background:
-        linear-gradient(var(--natsumi-mat-th-background, transparent), var(--natsumi-mat-th-background, transparent)),
-        light-dark(rgb(249, 249, 251), rgb(28, 27, 34));
-      --fx-card-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+    #nav-bar:has(#urlbar[open]) {
+      z-index: 1 !important;
+    }
 
-      #urlbar-container:has(> #urlbar:is([open], [focused][usertyping], [focused][suppress-focus-border])) {
-        padding-block: var(--natsumi-urlbar-container-padding) !important;
-      }
+    #nav-bar #urlbar[open] {
+      border-color: transparent !important;
+      box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.45), 0 12px 40px rgba(0, 0, 0, 0.45) !important;
 
-      #urlbar:is([open], [focused][usertyping], [focused][suppress-focus-border]) {
-        /* Keep the bar's place in the toolbar: drop Natsumi's offset and animation, hold the height. */
-        top: auto !important;
-        left: auto !important;
-        width: auto !important;
-        max-width: none !important;
-        translate: none !important;
-        scale: none !important;
-        animation: none !important;
-        contain: none !important;
-        border-color: transparent !important;
-        height: var(--natsumi-urlbar-height) !important;
-        min-height: var(--natsumi-urlbar-height) !important;
-        margin-block: var(--natsumi-urlbar-margin) !important;
-
-        & > .urlbar-background {
-          visibility: hidden !important;
-        }
-
-        /* The card. */
-        & > .urlbar-input-container {
-          position: fixed !important;
-          top: 20vh !important;
-          left: calc(50vw - var(--fx-card-width) / 2) !important;
-          width: var(--fx-card-width) !important;
-          max-width: none !important;
-          height: 48px !important;
-          margin: 0 !important;
-          padding: 0 6px !important;
-          box-sizing: border-box !important;
-          background: var(--fx-card-background) !important;
-          border: var(--fx-card-border) !important;
-          border-radius: var(--fx-card-radius) !important;
-          box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.45), var(--fx-card-shadow) !important;
-          transition: none !important;
-          animation: none !important;
-
-          &::before {
-            -moz-context-properties: stroke, fill, fill-opacity, stroke-opacity;
-            fill: light-dark(black, white);
-            content: "";
-            flex-shrink: 0;
-            width: 16px;
-            height: 16px;
-            background-image: url("chrome://browser/skin/preferences/category-search.svg");
-            background-size: 16px;
-            margin-block: auto !important;
-            margin-inline: 12px 16px !important;
-          }
-        }
-
-        & #urlbar-input {
-          text-align: start !important;
-          font-size: 18px !important;
-        }
-
-        & :is(#tracking-protection-icon-container, #identity-box, #page-action-buttons, #trust-icon-container) {
-          display: none !important;
-        }
-      }
-
-      /* The results list is the lower part of the same card. */
-      #urlbar[open] {
-        & > .urlbar-input-container {
-          border-bottom-color: transparent !important;
-          border-end-start-radius: 0 !important;
-          border-end-end-radius: 0 !important;
-        }
-
-        & > .urlbarView {
-          margin: 0 !important;
-          background: var(--fx-card-background) !important;
-          border: var(--fx-card-border) !important;
-          border-top: none !important;
-          border-radius: 0 0 var(--fx-card-radius) var(--fx-card-radius) !important;
-          box-shadow: var(--fx-card-shadow) !important;
-          clip-path: inset(0 -60px -60px -60px) !important;
-          animation: none !important;
-
-          & > .urlbarView-background {
-            display: none !important;
-          }
-        }
+      & > .urlbar-background {
+        background:
+          linear-gradient(var(--natsumi-mat-th-background, transparent), var(--natsumi-mat-th-background, transparent)),
+          light-dark(rgb(249, 249, 251), rgb(28, 27, 34)) !important;
+        border: 1px solid var(--natsumi-accent-color) !important;
       }
     }
   }
