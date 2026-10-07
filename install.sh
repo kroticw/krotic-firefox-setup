@@ -26,7 +26,7 @@
 
 set -euo pipefail
 
-NATSUMI_VERSION="${NATSUMI_VERSION:-v6.12.2}"
+NATSUMI_VERSION="${NATSUMI_VERSION:-v6.12.3}"
 # fx-autoconfig publishes no tags, so it is pinned by commit.
 FXAC_COMMIT="${FXAC_COMMIT:-dfdab5684faffc112b76ccb1d8cab7f75da0102c}"
 REPO_RAW="${REPO_RAW:-https://raw.githubusercontent.com/kroticw/krotic-firefox-setup/master}"
