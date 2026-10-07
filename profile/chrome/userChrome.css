@@ -191,71 +191,24 @@
 }
 
 /* ==========================================================================
-   Address bar: narrow pill at rest, dimmed opaque card while open
+   Fix: Natsumi's floating address bar with islands enabled
    ==========================================================================
 
-   Since 6.12.3 Natsumi draws the floating card itself on Firefox 157+: its
-   urlbar script strips the popover attribute from .urlbarView, so the results
-   list is laid out inside #urlbar again, and #urlbar[open] becomes
-   position: fixed with a column layout (modules/urlbar.css, scripts/urlbar.uc.mjs).
-   It also raises #navigator-toolbox above the page (z-index: 3, modules/base.css).
-   The card is placed, sized and animated by Natsumi; nothing here moves it.
-
-   What stays on top of Natsumi, all of it look rather than layout:
-   - at rest the pill's background and input container are narrowed to a
-     quarter of the window. Natsumi narrows only the input container (300px),
-     while .urlbar-background keeps the full width of #urlbar and reads as a
-     wide bar. The accent outline moves from #urlbar to the pill's background,
-     or it would outline an empty bar;
-   - the open card gets an accent border and an opaque background (Natsumi's
-     material over a solid colour), and the page behind it is dimmed by the
-     card's own shadow spread over the window (100vmax). A shadow takes no
-     clicks, so a click outside reaches the page and closes the card;
-   - #nav-bar and the bookmarks toolbar each carry browser-titlebar, whose
-     will-change: opacity makes each one its own stacking context, so the
-     bookmarks toolbar would paint over the dimming unless #nav-bar is lifted.
-   The #nav-bar in the selectors outranks Natsumi's rules.
+   With natsumi.theme.islands, Natsumi gives #navigator-toolbox a
+   backdrop-filter. An element with a backdrop-filter becomes the containing
+   block for position: fixed descendants, so the floating #urlbar[open] card is
+   laid out against the toolbox instead of the window and then cut off by the
+   toolbox's own overflow: clip — the card is there but never visible.
+   While the card is open, drop both from the toolbox and lift it above the page
+   (Natsumi's z-index: 3 does nothing on a static box).
    ========================================================================== */
 
-@media not -moz-pref("natsumi.urlbar.do-not-float") {
-  :root:not([taskbartab]) {
-    #navigator-toolbox {
-      --fx-pill-width: 25vw;
-    }
-
-    #navigator-toolbox:not(:hover) #nav-bar #urlbar:not([open], [focused][usertyping], [focused][suppress-focus-border]):not(:has(box[open], .urlbar-page-action[open])) {
-      border-color: transparent !important;
-
-      & > .urlbar-background {
-        inset-inline: max(0px, calc(50% - var(--fx-pill-width) / 2)) !important;
-        border: 1px solid color-mix(in srgb, var(--natsumi-accent-color) 55%, transparent) !important;
-        transition: inset-inline 0.2s ease 0.5s;
-      }
-
-      &[focused] > .urlbar-background {
-        border-color: var(--natsumi-accent-color) !important;
-      }
-
-      & > .urlbar-input-container {
-        max-width: min(var(--fx-pill-width), 100%) !important;
-        left: max(0px, calc(50% - var(--fx-pill-width) / 2)) !important;
-      }
-    }
-
-    #nav-bar:has(#urlbar[open]) {
-      z-index: 1 !important;
-    }
-
-    #nav-bar #urlbar[open] {
-      border-color: transparent !important;
-      box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.45), 0 12px 40px rgba(0, 0, 0, 0.45) !important;
-
-      & > .urlbar-background {
-        background:
-          linear-gradient(var(--natsumi-mat-th-background, transparent), var(--natsumi-mat-th-background, transparent)),
-          light-dark(rgb(249, 249, 251), rgb(28, 27, 34)) !important;
-        border: 1px solid var(--natsumi-accent-color) !important;
-      }
+@media -moz-pref("natsumi.theme.islands") {
+  @media not -moz-pref("natsumi.urlbar.do-not-float") {
+    :root:not([taskbartab]) #navigator-toolbox:has(#urlbar[open]) {
+      backdrop-filter: none !important;
+      overflow: visible !important;
+      position: relative !important;
     }
   }
 }
