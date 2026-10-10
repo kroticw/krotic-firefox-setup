@@ -21,6 +21,15 @@ user_pref("browser.startup.page", 3);
 user_pref("browser.sessionstore.max_windows_undo", 10);
 user_pref("browser.sessionstore.max_tabs_undo", 50);
 
+// --- Memory ---
+// Unload least-recently-used tabs under memory pressure. The macOS build ships
+// lowMemoryResponseMask = 0, which makes Firefox ignore memory pressure entirely;
+// 3 enables both tab unloading and the internal memory-pressure notification.
+user_pref("browser.lowMemoryResponseMask", 3);
+// Respond at the "warning" level: macOS hides shortage behind compression and
+// swap, so "critical" is rarely reached even with swap nearly full.
+user_pref("browser.lowMemoryResponseOnWarn", true);
+
 // --- Natsumi Browser ---
 user_pref("natsumi.browser.type", "firefox");
 user_pref("natsumi.glimpse.controls-on-right", false);
